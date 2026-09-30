@@ -1,0 +1,28 @@
+spring:
+  profiles:
+    active: local # 현재 활성화된 프로필 (클라우드 배포 시 prod로 변경)
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 로컬 DB 주소
+    url: jdbc:mysql://localhost:3306/crm_hardware_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: root
+    password: ${DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update # 로컬에서는 엔티티 변경 시 DB 자동 업데이트
+    show-sql: true
+    properties:
+      hibernate:
+      "[format_sql]": true
+
+# Gemini API Key (환경변수로 관리하는 것을 권장)
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}

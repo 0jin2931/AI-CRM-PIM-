@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-AiCrmPimApplication<ai_crm_pim>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.crm.AiCrmPimApplication",
+            "projectName": "ai_crm_pim",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

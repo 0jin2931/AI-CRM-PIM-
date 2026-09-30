@@ -1,0 +1,14 @@
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    # 깃허브에 올라가면 안 되므로 모두 환경변수(${...}) 처리합니다.
+    url: ${CLOUD_DB_URL}
+    username: ${CLOUD_DB_USERNAME}
+    password: ${CLOUD_DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate # 운영/클라우드 환경에서는 테이블을 멋대로 바꾸지 않도록 validate로 설정
+    show-sql: false # 성능을 위해 로그 비활성화
