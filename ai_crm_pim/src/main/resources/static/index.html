@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Smart CRM & Inventory Dashboard</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-gray-800 border-b border-gray-700 px-6 py-4 flex items-center justify-between shadow-lg">
+        <div class="flex items-center space-x-3">
+            <i class="fas fa-microchip text-blue-400 text-2xl"></i>
+            <h1 class="text-xl font-bold tracking-wide">Hardware CRM/PIM Engine</h1>
+            <span class="text-xs bg-blue-900 text-blue-300 border border-blue-700 px-2 py-0.5 rounded">Spring Boot 3 + Gemini</span>
+        </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="w-64 bg-gray-800 border-r border-gray-700 p-4 space-y-2">
+            <button onclick="switchTab('tab-crm')" id="btn-tab-crm" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 bg-blue-600 text-white font-medium transition">
+                <i class="fas fa-comments text-lg w-6"></i>
+                <span>AI 고객 검색</span>
+            </button>
+            <button onclick="switchTab('tab-stock')" id="btn-tab-stock" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 text-gray-400 hover:bg-gray-700 hover:text-gray-200 font-medium transition">
+                <i class="fas fa-boxes-stacked text-lg w-6"></i>
+                <span>재고 모니터링</span>
+            </button>
+            <button onclick="switchTab('tab-stress')" id="btn-tab-stress" class="tab-btn w-full text-left px-4 py-3 rounded-lg flex items-center space-x-3 text-gray-400 hover:bg-gray-700 hover:text-gray-200 font-medium transition">
+                <i class="fas fa-bolt text-lg w-6"></i>
+                <span>주문 시뮬레이터</span>
+            </button>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 overflow-y-auto bg-gray-900">
+            
+            <!-- TAB 1: AI 자연어 CRM 검색 -->
+            <section id="tab-crm" class="tab-content grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Chat View -->
+                <div class="lg:col-span-1 bg-gray-800 rounded-xl border border-gray-700 flex flex-col h-[650px] shadow-md">
+                    <div class="p-4 border-b border-gray-700">
+                        <span class="font-semibold text-sm text-gray-200"><i class="fas fa-robot text-blue-400 mr-2"></i>Gemini Query Parser</span>
+                    </div>
+                    <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4 text-sm">
+                        <div class="flex flex-col space-y-1 items-start">
+                            <span class="text-[10px] text-gray-500 ml-1">AI Assistant</span>
+                            <div class="bg-gray-700 text-gray-200 p-3 rounded-lg rounded-tl-none max-w-[85%]">
+                                안녕하세요. "VIP 고객 찾아줘" 처럼 자연어로 검색해 보세요.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-gray-700 flex gap-2">
+                        <input id="prompt-input" type="text" placeholder="검색 지시어 입력..." onkeypress="if(event.key === 'Enter') executeAiSearch()" class="flex-1 bg-gray-900 border border-gray-600 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:border-blue-500">
+                        <button onclick="executeAiSearch()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg text-sm transition">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Result Table View -->
+                <div class="lg:col-span-2 bg-gray-800 rounded-xl border border-gray-700 p-6 flex flex-col h-[650px] shadow-md">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="font-bold text-lg text-gray-100"><i class="fas fa-table text-blue-400 mr-2"></i>조회 결과</h2>
+                        <span id="member-count" class="text-xs bg-gray-700 px-3 py-1 rounded-full text-gray-300">대기 중</span>
+                    </div>
+                    <div class="flex-1 border border-gray-700 rounded-lg overflow-y-auto">
+                        <table class="w-full text-left text-sm text-gray-300">
+                            <thead class="bg-gray-900 text-xs uppercase text-gray-400 border-b border-gray-700 sticky top-0">
+                                <tr>
+                                    <th class="py-3 px-4">ID</th>
+                                    <th class="py-3 px-4">이름</th>
+                                    <th class="py-3 px-4">이메일</th>
+                                    <th class="py-3 px-4">등급</th>
+                                </tr>
+                            </thead>
+                            <tbody id="member-table-body" class="divide-y divide-gray-700 bg-gray-800">
+                                <tr><td colspan="4" class="py-12 text-center text-gray-500">AI 검색을 실행하면 결과가 나타납니다.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: 하드웨어 재고 모니터링 -->
+            <section id="tab-stock" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
+                    <div>
+                        <h2 class="text-lg font-bold text-gray-100"><i class="fas fa-boxes-stacked text-blue-400 mr-2"></i>실시간 재고 현황</h2>
+                        <p class="text-xs text-gray-400 mt-1">낙관적 락(Optimistic Lock) 버전을 포함한 DB 실시간 데이터</p>
+                    </div>
+                    <button onclick="loadProducts()" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition">
+                        <i class="fas fa-sync-alt"></i> 새로고침
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="product-card-container">
+                    <!-- 상품 카드 렌더링 영역 -->
+                </div>
+            </section>
+
+            <!-- TAB 3: 동시성 주문 시뮬레이터 -->
+            <section id="tab-stress" class="tab-content hidden max-w-2xl mx-auto bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-xl space-y-6">
+                <div class="border-b border-gray-700 pb-4">
+                    <h2 class="text-xl font-bold text-gray-100"><i class="fas fa-bolt text-amber-400 mr-2"></i>주문 트랜잭션 시뮬레이터</h2>
+                    <p class="text-sm text-gray-400 mt-2">입력한 회원 ID와 상품 ID를 바탕으로 재고 차감 트랜잭션을 발생시킵니다.</p>
+                </div>
+
+                <div class="space-y-4 bg-gray-900 p-5 rounded-lg border border-gray-700 text-sm">
+                    <div>
+                        <label class="block text-gray-400 text-xs mb-1 uppercase tracking-wider">회원 ID (Member PK)</label>
+                        <input id="order-member-id" type="number" value="1" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-xs mb-1 uppercase tracking-wider">상품 ID (Product PK)</label>
+                        <input id="order-product-id" type="number" value="1" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-xs mb-1 uppercase tracking-wider">주문 수량</label>
+                        <input id="order-count" type="number" value="1" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 text-gray-100 focus:border-blue-500 focus:outline-none">
+                    </div>
+                </div>
+
+                <button onclick="submitOrder()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3 rounded-lg shadow-lg transition duration-200">
+                    <i class="fas fa-shopping-cart mr-2"></i> 주문 실행
+                </button>
+
+                <div id="order-log" class="bg-black p-4 rounded-lg border border-gray-700 text-xs font-mono text-gray-300 min-h-[150px] max-h-[250px] overflow-y-auto space-y-1">
+                    <div class="text-gray-500">> 시스템 준비 완료.</div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // --- 탭 전환 로직 ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('bg-blue-600', 'text-white');
+                el.classList.add('text-gray-400');
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('btn-' + tabId);
+            activeBtn.classList.add('bg-blue-600', 'text-white');
+            activeBtn.classList.remove('text-gray-400');
+
+            if (tabId === 'tab-stock') loadProducts();
+        }
+
+        // --- 1. AI 고객 검색 (POST /api/ai/members/search) ---
+        async function executeAiSearch() {
+            const input = document.getElementById('prompt-input');
+            const query = input.value.trim();
+            if (!query) return;
+
+            appendChatMessage('user', query);
+            input.value = '';
+            const loadingId = appendChatMessage('ai', '<i class="fas fa-spinner fa-spin mr-2"></i>AI 분석 및 쿼리 실행 중...');
+
+            try {
+                const res = await fetch('/api/ai/members/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: query })
+                });
+
+                if (!res.ok) throw new Error(`[${res.status}] 백엔드 응답 에러 (컨트롤러 매핑 확인 필요)`);
+                const members = await res.json();
+
+                document.getElementById(loadingId).remove();
+                appendChatMessage('ai', `검색 완료! 조건에 맞는 데이터 ${members.length}건을 찾았습니다.`);
+                renderMemberTable(members);
+            } catch (err) {
+                document.getElementById(loadingId).remove();
+                appendChatMessage('ai', `<span class="text-red-400"><i class="fas fa-exclamation-triangle mr-1"></i>에러: ${err.message}</span>`);
+            }
+        }
+
+        function appendChatMessage(sender, text) {
+            const container = document.getElementById('chat-messages');
+            const id = 'msg-' + Date.now();
+            const wrapper = document.createElement('div');
+            wrapper.id = id;
+            wrapper.className = `flex flex-col space-y-1 ${sender === 'user' ? 'items-end' : 'items-start'}`;
+
+            const label = document.createElement('span');
+            label.className = `text-[10px] text-gray-500 ${sender === 'user' ? 'mr-1' : 'ml-1'}`;
+            label.textContent = sender === 'user' ? 'Admin' : 'AI Assistant';
+
+            const bubble = document.createElement('div');
+            bubble.className = sender === 'user' 
+                ? 'bg-blue-600 text-white p-3 rounded-lg rounded-tr-none max-w-[85%]'
+                : 'bg-gray-700 text-gray-200 p-3 rounded-lg rounded-tl-none max-w-[85%]';
+            bubble.innerHTML = text;
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(bubble);
+            container.appendChild(wrapper);
+            container.scrollTop = container.scrollHeight;
+            return id;
+        }
+
+        function renderMemberTable(members) {
+            const tbody = document.getElementById('member-table-body');
+            document.getElementById('member-count').textContent = `${members.length}건`;
+            tbody.innerHTML = '';
+
+            if (members.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="py-12 text-center text-gray-500">조건에 일치하는 데이터가 없습니다.</td></tr>';
+                return;
+            }
+
+            members.forEach(m => {
+                const isVip = m.grade === 'VIP';
+                const badge = isVip 
+                    ? '<span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded text-xs font-bold">VIP</span>'
+                    : '<span class="bg-gray-600 text-gray-300 px-2 py-0.5 rounded text-xs">NORMAL</span>';
+                
+                tbody.innerHTML += `
+                    <tr class="border-b border-gray-700/50 hover:bg-gray-700/30">
+                        <td class="py-3 px-4 font-mono text-gray-400">${m.id}</td>
+                        <td class="py-3 px-4 font-semibold text-gray-200">${m.name}</td>
+                        <td class="py-3 px-4 text-gray-400">${m.email}</td>
+                        <td class="py-3 px-4">${badge}</td>
+                    </tr>`;
+            });
+        }
+
+        // --- 2. 재고 조회 (GET /api/products) ---
+        async function loadProducts() {
+            const container = document.getElementById('product-card-container');
+            container.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500"><i class="fas fa-spinner fa-spin mr-2"></i>데이터 불러오는 중...</div>';
+
+            try {
+                const res = await fetch('/api/products');
+                if (!res.ok) throw new Error('조회 실패');
+                const products = await res.json();
+                
+                container.innerHTML = '';
+                if (products.length === 0) {
+                    container.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-500">등록된 상품이 없습니다. (DB 확인 요망)</div>';
+                    return;
+                }
+
+                products.forEach(p => {
+                    const stockClass = p.stockQuantity <= 10 ? 'text-red-400' : 'text-emerald-400';
+                    container.innerHTML += `
+                        <div class="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-center mb-2">
+                                    <span class="text-xs font-bold bg-blue-900 text-blue-300 px-2 py-1 rounded">${p.category}</span>
+                                    <span class="text-xs font-mono text-gray-500" title="낙관적 락 버전">Ver: ${p.version || 0}</span>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-100 mb-1">[${p.id}] ${p.name}</h3>
+                            </div>
+                            <div class="flex justify-between items-end mt-4 pt-4 border-t border-gray-700">
+                                <span class="text-gray-400 text-sm">₩ ${p.price.toLocaleString()}</span>
+                                <span class="font-bold ${stockClass} bg-gray-900 px-3 py-1 rounded-lg">재고: ${p.stockQuantity}개</span>
+                            </div>
+                        </div>`;
+                });
+            } catch (err) {
+                container.innerHTML = `<div class="col-span-3 text-center text-red-400 py-12">상품 로드 에러: ${err.message}</div>`;
+            }
+        }
+
+        // --- 3. 단일 주문 발생 (POST /api/orders) ---
+        async function submitOrder() {
+            const memberId = document.getElementById('order-member-id').value;
+            const productId = document.getElementById('order-product-id').value;
+            const count = document.getElementById('order-count').value;
+            const logBox = document.getElementById('order-log');
+            
+            const time = new Date().toLocaleTimeString();
+            logBox.innerHTML += `<div><span class="text-blue-400">[${time}]</span> REQ: 회원(${memberId}) -> 상품(${productId}) ${count}개 주문...</div>`;
+            logBox.scrollTop = logBox.scrollHeight;
+
+            try {
+                const res = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ memberId, productId, count })
+                });
+                const data = await res.json();
+
+                if (res.ok && data.status === 'SUCCESS') {
+                    logBox.innerHTML += `<div><span class="text-emerald-400">  └ [성공] 트랜잭션 완료 (주문번호 #${data.orderId})</span></div>`;
+                } else {
+                    logBox.innerHTML += `<div><span class="text-amber-400">  └ [실패] ${data.message || '재고 부족 또는 예외 발생'}</span></div>`;
+                }
+            } catch (err) {
+                logBox.innerHTML += `<div><span class="text-red-400">  └ [네트워크 에러] 백엔드 연결 불가 (${err.message})</span></div>`;
+            }
+            logBox.scrollTop = logBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>

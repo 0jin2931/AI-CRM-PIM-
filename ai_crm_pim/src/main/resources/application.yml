@@ -26,3 +26,8 @@ spring:
 gemini:
   api:
     key: ${GEMINI_API_KEY}
+
+logging:
+ level:
+   org.springframework.web: TRACE
+
