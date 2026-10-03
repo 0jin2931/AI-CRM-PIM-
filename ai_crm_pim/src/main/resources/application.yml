@@ -2,6 +2,11 @@ spring:
   profiles:
     active: local # 현재 활성화된 프로필 (클라우드 배포 시 prod로 변경)
 
+# Gemini API Key (모든 프로필 공통, 환경변수로 주입)
+gemini:
+  api:
+    key: ${GEMINI_API_KEY}
+
 ---
 spring:
   config:
@@ -20,14 +25,8 @@ spring:
     show-sql: true
     properties:
       hibernate:
-      "[format_sql]": true
-
-# Gemini API Key (환경변수로 관리하는 것을 권장)
-gemini:
-  api:
-    key: ${GEMINI_API_KEY}
+        "[format_sql]": true
 
 logging:
- level:
-   org.springframework.web: TRACE
-
+  level:
+    org.springframework.web: DEBUG

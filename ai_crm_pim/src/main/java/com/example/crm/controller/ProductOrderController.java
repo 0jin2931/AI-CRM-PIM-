@@ -1,8 +1,12 @@
 package com.example.crm.controller;
 
 import com.example.crm.domain.Product;
+import com.example.crm.dto.OrderRequest;
+import com.example.crm.dto.ProductCreateRequest;
+import com.example.crm.dto.ProductResponse;
 import com.example.crm.repository.ProductRepository;
 import com.example.crm.service.OptimisticLockOrderFacade;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,28 +24,24 @@ public class ProductOrderController {
 
     // 상품 전체 조회
     @GetMapping("/products")
-    public ResponseEntity<List<Product>> getProducts() {
-        return ResponseEntity.ok(productRepository.findAll());
+    public ResponseEntity<List<ProductResponse>> getProducts() {
+        return ResponseEntity.ok(productRepository.findAll().stream()
+                .map(ProductResponse::from)
+                .toList());
     }
 
-    // 상품 등록/초기화 (테스트용)
+    // 상품 등록 (테스트용)
     @PostMapping("/products")
-    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
-        return ResponseEntity.ok(productRepository.save(product));
+    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductCreateRequest request) {
+        Product saved = productRepository.save(request.toEntity());
+        return ResponseEntity.ok(ProductResponse.from(saved));
     }
 
     // 낙관적 락 주문 실행 (동시성 제어 테스트 연동)
+    // 실패 응답은 GlobalExceptionHandler가 {status: "FAIL", message} 형태로 반환
     @PostMapping("/orders")
-    public ResponseEntity<Map<String, Object>> placeOrder(@RequestBody Map<String, Object> req) {
-        Long memberId = Long.valueOf(req.get("memberId").toString());
-        Long productId = Long.valueOf(req.get("productId").toString());
-        int count = Integer.parseInt(req.get("count").toString());
-
-        try {
-            Long orderId = optimisticLockOrderFacade.orderWithOptimisticLock(memberId, productId, count);
-            return ResponseEntity.ok(Map.of("status", "SUCCESS", "orderId", orderId));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("status", "FAIL", "message", e.getMessage()));
-        }
+    public ResponseEntity<Map<String, Object>> placeOrder(@Valid @RequestBody OrderRequest req) {
+        Long orderId = optimisticLockOrderFacade.orderWithOptimisticLock(req.memberId(), req.productId(), req.count());
+        return ResponseEntity.ok(Map.of("status", "SUCCESS", "orderId", orderId));
     }
 }
