@@ -25,6 +25,9 @@ public class OrderConcurrencyTest {
     private OptimisticLockOrderFacade optimisticLockOrderFacade;
 
     @Autowired
+    private OrderService orderService;
+
+    @Autowired
     private ProductRepository productRepository;
 
     @Autowired
@@ -88,13 +91,40 @@ public class OrderConcurrencyTest {
         }
 
         latch.await();
+        executorService.shutdown();
 
         Product findProduct = productRepository.findById(testProduct.getId()).orElseThrow();
-        
+
         System.out.println("======================================");
         System.out.println("테스트 종료 후 남은 재고: " + findProduct.getStockQuantity() + "개");
         System.out.println("======================================");
         
+        assertThat(findProduct.getStockQuantity()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("100명의 요청이 동시에 들어왔을 때 비관적 락으로 재고가 정상 차감되어야 한다")
+    public void 동시에_100명_주문_비관적_락_테스트() throws InterruptedException {
+        int threadCount = 100;
+        ExecutorService executorService = Executors.newFixedThreadPool(10);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                try {
+                    orderService.orderWithPessimisticLock(testMember.getId(), testProduct.getId(), 1);
+                } catch (Exception e) {
+                    System.out.println("🚨 찐 스레드 에러: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await();
+        executorService.shutdown();
+
+        Product findProduct = productRepository.findById(testProduct.getId()).orElseThrow();
         assertThat(findProduct.getStockQuantity()).isEqualTo(0);
     }
 }

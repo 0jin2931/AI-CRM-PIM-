@@ -21,10 +21,8 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-validation")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
-	implementation ("org.springframework.boot:spring-boot-starter-webflux")// WebClient를 사용하기 위한 WebFlux 의존성 추가
-	implementation ("org.springframework.boot:spring-boot-starter-web")
-	implementation ("com.querydsl:querydsl-jpa:5.0.0:jakarta")
-	implementation ("com.fasterxml.jackson.core:jackson-databind")
+	implementation("org.springframework.boot:spring-boot-starter-webflux") // WebClient를 사용하기 위한 WebFlux 의존성
+	implementation("com.querydsl:querydsl-jpa:5.0.0:jakarta")
 
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.mysql:mysql-connector-j")
@@ -48,10 +46,9 @@ tasks.withType<Test> {
     // 1. 콘솔창 한글 깨짐 방지 (괄호와 쌍따옴표 사용)
     systemProperty("file.encoding", "UTF-8")
     
-    // 2. OS 환경변수를 테스트 환경으로 전달 (def 대신 val 사용)
-    val dbPassword = System.getenv("DB_PASSWORD") ?: "Dudwls@2931"
-    environment("DB_PASSWORD", dbPassword)
-    
-    val geminiApiKey = System.getenv("GEMINI_API_KEY") ?: "mock-key"
-    environment("GEMINI_API_KEY", geminiApiKey)
+    // 2. DB_PASSWORD 등 OS 환경변수는 테스트 JVM에 그대로 상속됨 (비밀번호를 코드에 하드코딩하지 말 것)
+    //    GEMINI_API_KEY가 없으면 컨텍스트 로딩만 되도록 mock 값 사용
+    if (System.getenv("GEMINI_API_KEY") == null) {
+        environment("GEMINI_API_KEY", "mock-key")
+    }
 }

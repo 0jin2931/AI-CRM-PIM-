@@ -29,12 +29,15 @@ public class Order {
 
     private String status; // ORDERED, CANCELED
 
+    private Integer totalPrice; // 총 결제 금액 (주문 상품 가격 × 수량의 합)
+
     private LocalDateTime orderDate;
 
     // == 연관관계 편의 메서드 ==
     public void addOrderItem(OrderItem orderItem) {
         orderItems.add(orderItem);
         orderItem.setOrder(this);
+        this.totalPrice = (this.totalPrice == null ? 0 : this.totalPrice) + orderItem.getTotalPrice();
     }
 
     // == 생성 메서드 ==

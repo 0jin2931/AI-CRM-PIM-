@@ -1,6 +1,6 @@
 package com.example.crm.controller;
 
-import com.example.crm.domain.Member;
+import com.example.crm.dto.MemberResponse;
 import com.example.crm.service.CrmService;
 import com.example.crm.service.GeminiService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +16,7 @@ import java.util.Map;
 public class GeminiController {
 
     private final GeminiService geminiService;
-    private final CrmService CrmService; // 이 주입이 누락되었는지 확인
+    private final CrmService crmService;
 
     @PostMapping("/ask")
     public ResponseEntity<String> askAi(@RequestBody Map<String, String> request) {
@@ -27,9 +27,11 @@ public class GeminiController {
 
     // 🔥 프론트엔드가 호출하는 엔드포인트: POST /api/ai/members/search
     @PostMapping("/members/search")
-    public ResponseEntity<List<Member>> searchMembers(@RequestBody Map<String, String> request) {
+    public ResponseEntity<List<MemberResponse>> searchMembers(@RequestBody Map<String, String> request) {
         String prompt = request.get("prompt");
-        List<Member> result = CrmService.searchMembersByNaturalLanguage(prompt);
+        List<MemberResponse> result = crmService.searchMembersByNaturalLanguage(prompt).stream()
+                .map(MemberResponse::from)
+                .toList();
         return ResponseEntity.ok(result);
     }
 }

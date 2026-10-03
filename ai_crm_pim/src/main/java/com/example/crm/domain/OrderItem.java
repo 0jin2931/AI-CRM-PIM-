@@ -39,6 +39,11 @@ public class OrderItem {
         return orderItem;
     }
 
+    // 주문 상품 금액 (주문 당시 가격 × 수량)
+    public int getTotalPrice() {
+        return orderPrice * count;
+    }
+
     // 연관관계 편의 메서드를 위해 (Order 클래스에서 사용)
     protected void setOrder(Order order) {
         this.order = order;
